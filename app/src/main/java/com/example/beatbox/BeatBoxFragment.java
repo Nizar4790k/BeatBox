@@ -44,7 +44,15 @@ public class BeatBoxFragment extends Fragment {
         private SoundHolder(ListItemSoundBinding binding) {
             super(binding.getRoot());
             mBinding = binding;
+            mBinding.setViewModel(new SoundViewModel(mBeatBox));
         }
+
+        public void bind(Sound sound) {
+            mBinding.getViewModel().setSound(sound);
+            mBinding.executePendingBindings();
+
+        }
+
     }
 
 
@@ -60,11 +68,19 @@ public class BeatBoxFragment extends Fragment {
         @NonNull
         @Override
         public SoundHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return null;
+            LayoutInflater inflater = LayoutInflater.from(getActivity());
+            ListItemSoundBinding binding = DataBindingUtil
+                    .inflate(inflater, R.layout.list_item_sound, parent, false);
+            return new SoundHolder(binding);
         }
 
         @Override
         public void onBindViewHolder(SoundHolder holder, int position) {
+
+            Sound sound = mSounds.get(position);
+            holder.bind(sound);
+
+
         }
         @Override
         public int getItemCount() {
