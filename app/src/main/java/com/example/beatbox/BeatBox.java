@@ -1,7 +1,10 @@
 package com.example.beatbox;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.util.Log;
 
 import java.io.IOException;
@@ -12,15 +15,39 @@ public class BeatBox  {
 
     private static  final String TAG="BeatBox";
     private static final String SOUNDS_FOLDER="sample_sounds";
+    private static final int MAX_SOUNDS = 5;
 
     private List<Sound> mSounds= new ArrayList<>();
+    private SoundPool mSoundPool;
+    private Integer mSoundId;
 
     private AssetManager mAssets;
 
     public BeatBox(Context context){
         mAssets = context.getAssets();
+        // This old constructor is deprecated but needed for compatibility
+        mSoundPool = new SoundPool(MAX_SOUNDS, AudioManager.STREAM_MUSIC, 0);
         loadSounds();
     }
+
+
+    public void play(Sound sound) {
+        mSoundId = sound.getSoundId();
+        if (mSoundId == null) {
+            return;
+        }
+
+    }
+
+
+    public void play(float rate){
+        mSoundPool.play(mSoundId, 1.0f, 1.0f, 1, 0, (rate*0.01f));
+    }
+
+    public void release() {
+        mSoundPool.release();
+    }
+
 
     private void loadSounds() {
         String[] soundNames;
@@ -33,17 +60,34 @@ public class BeatBox  {
         }
 
         for (String filename : soundNames) {
-            String assetPath = SOUNDS_FOLDER + "/" + filename;
-            Sound sound = new Sound(assetPath);
-            mSounds.add(sound);
+
+           try {
+               String assetPath = SOUNDS_FOLDER + "/" + filename;
+               Sound sound = new Sound(assetPath);
+               load(sound);
+               mSounds.add(sound);
+
+           }catch (IOException ioe){
+               Log.e(TAG, "Could not load sound " + filename, ioe);
+           }
+
         }
 
 
     }
 
+    private void load(Sound sound) throws IOException {
+        AssetFileDescriptor afd = mAssets.openFd(sound.getAssetPath());
+        int soundId = mSoundPool.load(afd, 1);
+        sound.setSoundId(soundId);
+    }
+
+
     public List<Sound> getSounds() {
         return mSounds;
     }
 
-
+    public SoundPool getSoundPool() {
+        return mSoundPool;
+    }
 }
